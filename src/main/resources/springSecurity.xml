@@ -1,0 +1,62 @@
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:p="http://www.springframework.org/schema/p"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:security="http://www.springframework.org/schema/security"
+       xsi:schemaLocation="
+                 http://www.springframework.org/schema/beans
+                 http://www.springframework.org/schema/beans/spring-beans.xsd
+                 http://www.springframework.org/schema/context
+                 http://www.springframework.org/schema/context/spring-context.xsd
+                 http://www.springframework.org/schema/security
+                 http://www.springframework.org/schema/security/spring-security.xsd">
+
+
+    <security:http pattern="/index.jsp" security="none"/>
+    <security:http pattern="/static/**" security="none"/>
+    <security:http pattern="/validator/*" security="none"/>
+
+    <!--web认证配置-->
+    <security:http auto-config='true'>
+        <!--认证页不要授权
+        <security:intercept-url pattern="/index.jsp" access="permitAll()"/>
+        -->
+        <!--配置要授予权的资源-->
+        <security:intercept-url pattern="/**" access="isAuthenticated()"/>
+
+        <security:form-login
+                             login-page="/index.jsp"
+                             login-processing-url="/auth/login"
+                             default-target-url="/main/ok"
+                             />
+        <!--退出配置-->
+        <security:logout invalidate-session="true"
+                         logout-success-url="/index.jsp"
+                         logout-url="/auth/logout"/>
+
+        <!--授权拦截器-->
+        <security:custom-filter ref="sercurityInterceptor" before="FILTER_SECURITY_INTERCEPTOR"/>
+        <!--授权失败处理器-->
+        <security:access-denied-handler ref="jackAccessDeniedHandler"/>
+        <security:csrf disabled="true"/>
+    </security:http>
+    <!--密码编码器-->
+    <bean id="md5PasswordEncoder" class="org.fjh.security.authentication.Md5PasswordEncoder"/>
+
+    <!--认证管理器-->
+    <security:authentication-manager >
+        <!--认证器实现者
+        <security:authentication-provider >
+            <security:user-service >
+                <security:user name="jack" password="jack" authorities="ROLE_USER" />
+            </security:user-service>
+            <security:password-encoder ref="noOpPasswordEncoder"/>
+        </security:authentication-provider>
+        -->
+        <security:authentication-provider
+                ref="jackDaoAuthenticationProvider">
+        </security:authentication-provider>
+
+    </security:authentication-manager>
+
+</beans>
